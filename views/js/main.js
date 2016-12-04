@@ -16,6 +16,13 @@ Cameron Pittman, Udacity Course Developer
 cameron *at* udacity *dot* com
 */
 
+// Here we store the array of sliding pizza elements to avoid requering them
+// every time.
+var slidingPizzas = [];
+
+// Create an array to store the phases values for pizza motion elements.
+var phases = [];
+
 // As you may have realized, this website randomly generates pizzas.
 // Here are arrays of all possible pizza ingredients.
 var pizzaIngredients = {};
@@ -501,10 +508,9 @@ function updatePositions() {
   frame++;
   window.performance.mark("mark_start_frame");
 
-  var items = document.querySelectorAll('.mover');
-  for (var i = 0; i < items.length; i++) {
-    var phase = Math.sin((document.body.scrollTop / 1250) + (i % 5));
-    items[i].style.left = items[i].basicLeft + 100 * phase + 'px';
+  for (var i = 0; i < slidingPizzas.length; i++) {
+    var phase = phases[document.body.scrollTop][i % 5];
+    slidingPizzas[i].style.left = slidingPizzas[i].basicLeft + 100 * phase + 'px';
   }
 
   // User Timing API to the rescue again. Seriously, it's worth learning.
@@ -520,6 +526,20 @@ function updatePositions() {
 // runs updatePositions on scroll
 window.addEventListener('scroll', updatePositions);
 
+// To avoid recalculating the phase value every time the user scrolls, we 
+// created this function to memoise the possible values in an array.
+function precalcPhases() {
+  for (var i = 0; i < 20000; i++) {
+    phases[i] = [];
+    for (var j = 0; j < 5; j++) {
+      phases[i].push(Math.sin((i / 1250) + j));
+    }
+  }
+};
+
+// Run the precalcPhases to fill the phases array.
+precalcPhases();
+
 // Generates the sliding pizzas when the page loads.
 document.addEventListener('DOMContentLoaded', function() {
   var cols = 8;
@@ -534,5 +554,9 @@ document.addEventListener('DOMContentLoaded', function() {
     elem.style.top = (Math.floor(i / cols) * s) + 'px';
     document.querySelector("#movingPizzas1").appendChild(elem);
   }
+
+  // Store the sliding pizzas in one array to avoid further queries
+  slidingPizzas = document.querySelectorAll('.mover');
+
   updatePositions();
 });
